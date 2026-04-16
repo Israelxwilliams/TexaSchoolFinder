@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { schools } from './data/schools.js'
+import { useQuery } from 'convex/react'
+import { api } from '../convex/_generated/api'
 import Navbar from './components/Navbar.jsx'
 import HeroSearch from './components/HeroSearch.jsx'
 import FilterSidebar from './components/FilterSidebar.jsx'
@@ -79,6 +80,9 @@ const initialFilters = {
 }
 
 export default function App() {
+  const schoolsFromDB = useQuery(api.schools.getAll)
+  const schools = (schoolsFromDB ?? []).map(s => ({ ...s, id: s.schoolId }))
+
   const [filters, setFilters] = useState(initialFilters)
   const [savedSchools, setSavedSchools] = useState([])
   const [isIEP, setIsIEP] = useState(false)
@@ -303,7 +307,7 @@ export default function App() {
     }
 
     return result
-  }, [filters, tefaAmount])
+  }, [filters, tefaAmount, schools])
 
   const savedSchoolObjects = useMemo(() =>
     schools.filter(s => savedSchools.includes(s.id)),
