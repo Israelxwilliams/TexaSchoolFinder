@@ -141,7 +141,11 @@ function mapSchool(raw) {
     graduationRate: acad.graduationRate || null,
     retentionRate: acad.retentionRate || null,
     studentTeacherRatio: str,
-    notableAchievements: acad.notableAchievements || [],
+    notableAchievements: Array.isArray(acad.notableAchievements)
+      ? acad.notableAchievements
+      : (typeof acad.notableAchievements === 'string' && acad.notableAchievements.trim()
+          ? [acad.notableAchievements.trim()]
+          : []),
 
     // Services
     specialEdSupport: hasAmenity(supportResources, "special") || hasAmenity(amenities, "special"),
