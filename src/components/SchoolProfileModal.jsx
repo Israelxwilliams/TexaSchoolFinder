@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Star, Heart, Navigation, X, DollarSign, Check, CircleCheck } from 'lucide-react'
+import { getStockPhoto, getLogoDomain, getLogoUrl } from '../utils/schoolImage.js'
 
 function StarRating({ rating, size = 'sm' }) {
   const s = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
@@ -126,12 +127,30 @@ function CoverageBreakdown({ maxTuition, tefaAmount, isIEP, onToggleIEP }) {
   )
 }
 
+function SchoolLogoHero({ school }) {
+  const [failed, setFailed] = useState(false)
+  const logoUrl = getLogoUrl(school)
+  if (!logoUrl || failed) return null
+  return (
+    <img
+      src={logoUrl}
+      alt={`${school.name} logo`}
+      className="w-14 h-14 rounded-xl bg-white shadow-lg border-2 border-white/60 object-contain p-1 flex-shrink-0"
+      onError={() => setFailed(true)}
+      onLoad={(e) => { if (e.target.naturalWidth <= 16) setFailed(true) }}
+    />
+  )
+}
+
 export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggleIEP, isSaved, onToggleSave, onClose }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [formData, setFormData] = useState({ parentName: '', email: '', phone: '', childGrade: '', childName: '', tefaStatus: '', message: '' })
   const [formSubmitted, setFormSubmitted] = useState(false)
 
-  const maxTuition = Math.max(...Object.values(school.tuitionByGrade))
+  const tuitionVals = school.tuitionByGrade
+    ? Object.values(school.tuitionByGrade).filter(v => typeof v === 'number' && v > 0)
+    : []
+  const maxTuition = tuitionVals.length > 0 ? Math.max(...tuitionVals) : 0
 
   const handleFormSubmit = (e) => {
     e.preventDefault()
@@ -147,21 +166,24 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
         {/* Hero Image */}
         <div className="relative h-56 sm:h-72 overflow-hidden">
           <img
-            src={school.photos[0]}
+            src={getStockPhoto(school)}
             alt={school.name}
             className="w-full h-full object-cover"
-            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800' }}
+            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-charcoal hover:bg-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
-          <div className="absolute bottom-4 left-4 right-4">
-            <h2 className="font-display text-2xl sm:text-3xl font-bold text-white">{school.name}</h2>
-            <p className="text-white/80 text-sm mt-1">{school.tagline}</p>
+          <div className="absolute bottom-4 left-4 right-14 flex items-end gap-3">
+            <SchoolLogoHero school={school} />
+            <div className="min-w-0">
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-white leading-tight">{school.name}</h2>
+              {school.tagline && <p className="text-white/80 text-sm mt-0.5">{school.tagline}</p>}
+            </div>
           </div>
         </div>
 
@@ -468,18 +490,35 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
           {activeTab === 'gallery' && (
             <div>
               <h3 className="font-display text-xl font-bold text-charcoal mb-3">Photo Gallery</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {school.photos.map((photo, i) => (
+              {(school.photos ?? []).length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {school.photos.map((photo, i) => (
+                    <img
+                      key={i}
+                      src={photo}
+                      alt={`${school.name} photo ${i + 1}`}
+                      className="w-full h-40 object-cover rounded-xl"
+                      loading="lazy"
+                      onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80' }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
                   <img
-                    key={i}
-                    src={photo}
-                    alt={`${school.name} photo ${i + 1}`}
-                    className="w-full h-40 object-cover rounded-xl"
-                    loading="lazy"
-                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800' }}
+                    src={getStockPhoto(school)}
+                    alt={school.name}
+                    className="w-full h-56 object-cover rounded-xl"
                   />
-                ))}
-              </div>
+                  <p className="text-xs text-charcoal-light text-center">
+                    School photos not yet available. Visit{' '}
+                    {school.website
+                      ? <a href={school.website} target="_blank" rel="noopener noreferrer" className="text-burnt underline">{getLogoDomain(school)}</a>
+                      : 'the school website'
+                    }{' '}for more images.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

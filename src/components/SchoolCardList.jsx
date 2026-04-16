@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Heart, ChevronRight, SearchX, Star } from 'lucide-react'
+import { getStockPhoto, getLogoUrl } from '../utils/schoolImage.js'
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevance' },
@@ -25,7 +26,7 @@ function StarRating({ rating }) {
   )
 }
 
-function CoverageBar({ coveragePercent, tefaAmount, outOfPocket, maxTuition }) {
+function CoverageBar({ coveragePercent, tefaAmount, outOfPocket }) {
   const clampedPercent = Math.min(100, coveragePercent)
   return (
     <div className="mt-2">
@@ -59,19 +60,46 @@ function CoverageBar({ coveragePercent, tefaAmount, outOfPocket, maxTuition }) {
   )
 }
 
+function SchoolLogo({ school, size = 'sm' }) {
+  const [failed, setFailed] = useState(false)
+  const logoUrl = getLogoUrl(school)
+  if (!logoUrl || failed) return null
+
+  const cls = size === 'sm'
+    ? 'w-8 h-8 rounded-lg bg-white shadow-md border border-white/80 p-0.5'
+    : 'w-12 h-12 rounded-xl bg-white shadow-lg border border-white/80 p-1'
+
+  return (
+    <img
+      src={logoUrl}
+      alt={`${school.name} logo`}
+      className={`${cls} object-contain`}
+      onError={() => setFailed(true)}
+      onLoad={(e) => {
+        // Hide generic Google globe fallback (always 16px wide at natural size)
+        if (e.target.naturalWidth <= 16) setFailed(true)
+      }}
+    />
+  )
+}
+
 function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHover }) {
-  const minTuition = Math.min(...Object.values(school.tuitionByGrade))
-  const maxTuition = Math.max(...Object.values(school.tuitionByGrade))
+  const tuitionVals = school.tuitionByGrade
+    ? Object.values(school.tuitionByGrade).filter(v => typeof v === 'number' && v > 0)
+    : []
+  const maxTuition = tuitionVals.length > 0 ? Math.max(...tuitionVals) : 0
   const outOfPocket = maxTuition > tefaAmount ? maxTuition - tefaAmount : 0
-  const coveragePercent = Math.min(100, Math.round((tefaAmount / maxTuition) * 100))
+  const coveragePercent = maxTuition > 0 ? Math.min(100, Math.round((tefaAmount / maxTuition) * 100)) : 100
 
   const highlights = [
     ...(school.apCourses ? ['AP Courses'] : []),
     ...(school.ibProgram ? ['IB Program'] : []),
     ...(school.dualEnrollment ? ['Dual Enrollment'] : []),
-    ...school.athletics.slice(0, 2),
-    ...school.fineArts.slice(0, 1),
+    ...((school.athletics ?? []).slice(0, 2)),
+    ...((school.fineArts ?? []).slice(0, 1)),
   ].slice(0, 3)
+
+  const heroImg = getStockPhoto(school)
 
   return (
     <div
@@ -84,17 +112,25 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
         {/* Image */}
         <div className="sm:w-48 h-40 sm:h-auto relative overflow-hidden flex-shrink-0">
           <img
-            src={school.photos[0]}
+            src={heroImg}
             alt={school.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
-            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800' }}
+            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80' }}
           />
-          {/* Coverage badge - primary metric */}
+          {/* Dark gradient for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+
+          {/* Coverage badge */}
           <div className={`absolute top-2 left-2 text-white text-xs font-bold px-2.5 py-1 rounded-lg ${
             coveragePercent >= 100 ? 'bg-green-600' : coveragePercent >= 75 ? 'bg-burnt' : 'bg-amber-600'
           }`}>
             {coveragePercent}% Covered
+          </div>
+
+          {/* School logo badge */}
+          <div className="absolute bottom-2 right-2">
+            <SchoolLogo school={school} size="sm" />
           </div>
         </div>
 
@@ -104,7 +140,7 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
             <div className="min-w-0">
               <h3 className="font-display text-lg font-bold text-charcoal truncate">{school.name}</h3>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {school.type.map(t => (
+                {(school.type ?? []).map(t => (
                   <span key={t} className="text-[10px] font-semibold bg-cream-dark text-burnt px-2 py-0.5 rounded-md">{t}</span>
                 ))}
                 <span className="text-[10px] text-charcoal-light">{school.gradesLabel}</span>
@@ -133,19 +169,21 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
 
           {/* Stats row */}
           <div className="flex items-center gap-3 mt-2 text-[11px] text-charcoal-light">
-            {school.distanceFromSearch !== null && (
+            {school.distanceFromSearch != null && (
               <span>{school.distanceFromSearch.toFixed(1)} mi away</span>
             )}
-            <span>{school.enrollment} students</span>
-            <span>{school.studentTeacherRatio} ratio</span>
+            {school.enrollment > 0 && <span>{school.enrollment} students</span>}
+            {school.studentTeacherRatio && <span>{school.studentTeacherRatio} ratio</span>}
           </div>
 
           {/* Rating */}
-          <div className="flex items-center gap-1.5 mt-2">
-            <StarRating rating={school.rating} />
-            <span className="text-xs font-semibold text-charcoal">{school.rating}</span>
-            <span className="text-[11px] text-charcoal-light">({school.reviewCount} reviews)</span>
-          </div>
+          {school.rating > 0 && (
+            <div className="flex items-center gap-1.5 mt-2">
+              <StarRating rating={school.rating} />
+              <span className="text-xs font-semibold text-charcoal">{school.rating}</span>
+              <span className="text-[11px] text-charcoal-light">({school.reviewCount} reviews)</span>
+            </div>
+          )}
 
           {/* Highlights */}
           {highlights.length > 0 && (
