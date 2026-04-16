@@ -88,11 +88,11 @@ export default function SchoolMap({ schools, center, zoom, hoveredSchoolId, radi
 
       marker.bindPopup(`
         <div style="min-width: 180px;">
-          <strong style="font-size: 14px; font-family: 'DM Serif Display', serif;">${school.name}</strong>
+          <strong style="font-size: 14px; font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;">${school.name}</strong>
           <div style="margin-top: 4px; font-size: 12px; color: #4A5568;">${school.type.join(' · ')} · ${school.gradesLabel}</div>
           <div style="margin-top: 4px; font-size: 13px; font-weight: 700; color: #1A202C;">${school.tuitionDisplay}</div>
           <div style="margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-            <span style="color: #D69E2E;">&#9733;</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#D69E2E" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             <span style="font-size: 12px; font-weight: 600;">${school.rating}</span>
             <span style="font-size: 11px; color: #718096;">(${school.reviewCount})</span>
           </div>

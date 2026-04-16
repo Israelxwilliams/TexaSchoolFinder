@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { schools } from './data/schools.js'
 import Navbar from './components/Navbar.jsx'
 import HeroSearch from './components/HeroSearch.jsx'
@@ -8,6 +8,7 @@ import SchoolMap from './components/SchoolMap.jsx'
 import SchoolProfileModal from './components/SchoolProfileModal.jsx'
 import TEFAInfoModal from './components/TEFAInfoModal.jsx'
 import SavedSchoolsDrawer from './components/SavedSchoolsDrawer.jsx'
+import CompareSchools from './components/CompareSchools.jsx'
 
 const DEFAULT_CENTER = { lat: 31.9686, lng: -99.9018 } // Center of Texas
 const TEFA_STANDARD = 10474
@@ -84,6 +85,7 @@ export default function App() {
   const [selectedSchool, setSelectedSchool] = useState(null)
   const [showTEFAInfo, setShowTEFAInfo] = useState(false)
   const [showSavedDrawer, setShowSavedDrawer] = useState(false)
+  const [showCompare, setShowCompare] = useState(false)
   const [hoveredSchoolId, setHoveredSchoolId] = useState(null)
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
@@ -116,7 +118,6 @@ export default function App() {
         searchLocation: cityMatch[1],
       }))
     } else {
-      // Try ZIP code matching or just set the query
       setFilters(prev => ({
         ...prev,
         searchQuery: query,
@@ -304,6 +305,11 @@ export default function App() {
     return result
   }, [filters, tefaAmount])
 
+  const savedSchoolObjects = useMemo(() =>
+    schools.filter(s => savedSchools.includes(s.id)),
+    [savedSchools]
+  )
+
   const mapCenter = filters.searchLocation || DEFAULT_CENTER
   const mapZoom = filters.searchLocation ? 10 : 6
 
@@ -316,6 +322,8 @@ export default function App() {
         onToggleIEP={() => setIsIEP(prev => !prev)}
         onShowTEFAInfo={() => setShowTEFAInfo(true)}
         onShowSaved={() => setShowSavedDrawer(true)}
+        onShowCompare={() => setShowCompare(true)}
+        compareCount={savedSchools.length}
       />
 
       <HeroSearch
@@ -424,11 +432,20 @@ export default function App() {
 
       {showSavedDrawer && (
         <SavedSchoolsDrawer
-          schools={schools.filter(s => savedSchools.includes(s.id))}
+          schools={savedSchoolObjects}
           tefaAmount={tefaAmount}
           onSelectSchool={(s) => { setSelectedSchool(s); setShowSavedDrawer(false) }}
           onToggleSave={toggleSave}
           onClose={() => setShowSavedDrawer(false)}
+        />
+      )}
+
+      {showCompare && savedSchools.length > 0 && (
+        <CompareSchools
+          schools={savedSchoolObjects}
+          tefaAmount={tefaAmount}
+          onClose={() => setShowCompare(false)}
+          onSelectSchool={setSelectedSchool}
         />
       )}
     </div>

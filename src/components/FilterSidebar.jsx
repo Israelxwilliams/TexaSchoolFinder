@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { MapPin, DollarSign, BookOpen, Trophy, Building2, Star, ChevronDown, Info } from 'lucide-react'
 
 const SCHOOL_TYPES = ['Catholic', 'Christian', 'Jewish', 'Islamic', 'Non-denominational', 'Secular', 'Montessori', 'STEM', 'Classical', 'Liberal Arts', 'Online/Hybrid']
 const ACCREDITATIONS = ['TEPSAC', 'SACS', 'AdvancED', 'TCSA']
@@ -9,7 +10,7 @@ const FINE_ARTS = ['Band', 'Orchestra', 'Choir', 'Theater', 'Visual Arts', 'Film
 const CLUBS = ['Robotics', 'Debate', 'Model UN', 'Student Government', 'National Honor Society', 'STEM Club', 'Coding Club', 'Beta Club']
 const SETTINGS = ['Urban', 'Suburban', 'Rural']
 
-function FilterSection({ title, icon, defaultOpen = false, children }) {
+function FilterSection({ title, icon: Icon, defaultOpen = false, children }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
     <div className="border-b border-gray-100 py-3">
@@ -18,11 +19,9 @@ function FilterSection({ title, icon, defaultOpen = false, children }) {
         className="w-full flex items-center justify-between text-left"
       >
         <span className="font-semibold text-sm text-charcoal flex items-center gap-2">
-          <span>{icon}</span> {title}
+          <Icon className="w-4 h-4 text-charcoal-light" /> {title}
         </span>
-        <svg className={`w-4 h-4 text-charcoal-light transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        <ChevronDown className={`w-4 h-4 text-charcoal-light transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && <div className="mt-3 space-y-2.5">{children}</div>}
     </div>
@@ -59,7 +58,11 @@ function ToggleCheckbox({ label, checked, onChange, info }) {
     <label className="flex items-center justify-between cursor-pointer group">
       <span className="text-xs text-charcoal-light group-hover:text-charcoal transition-colors flex items-center gap-1">
         {label}
-        {info && <span className="text-[10px] text-gray-400" title={info}>&#9432;</span>}
+        {info && (
+          <span title={info}>
+            <Info className="w-3 h-3 text-gray-400" />
+          </span>
+        )}
       </span>
       <input
         type="checkbox"
@@ -81,12 +84,14 @@ export default function FilterSidebar({ filters, updateFilter, resetFilters }) {
 
       {/* TEFA Badge */}
       <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-3 flex items-center gap-2">
-        <span className="text-green-600 text-sm font-bold">&#10003;</span>
+        <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
         <span className="text-xs font-semibold text-green-700">Accepts TEFA Funding</span>
       </div>
 
       {/* Location */}
-      <FilterSection title="Location & Distance" icon="&#128205;" defaultOpen={true}>
+      <FilterSection title="Location & Distance" icon={MapPin} defaultOpen={true}>
         <div>
           <label className="text-[11px] text-charcoal-light font-medium">Search radius: {filters.radius} miles</label>
           <input
@@ -106,10 +111,10 @@ export default function FilterSidebar({ filters, updateFilter, resetFilters }) {
       </FilterSection>
 
       {/* Tuition */}
-      <FilterSection title="Tuition & TEFA Coverage" icon="&#128176;" defaultOpen={true}>
+      <FilterSection title="Tuition & TEFA Coverage" icon={DollarSign} defaultOpen={true}>
         <div>
           <label className="text-[11px] text-charcoal-light font-medium">
-            Tuition range: ${filters.tuitionMin.toLocaleString()} – ${filters.tuitionMax >= 40000 ? '$40,000+' : `$${filters.tuitionMax.toLocaleString()}`}
+            Tuition range: ${filters.tuitionMin.toLocaleString()} to {filters.tuitionMax >= 40000 ? '$40,000+' : `$${filters.tuitionMax.toLocaleString()}`}
           </label>
           <div className="flex gap-2 mt-1">
             <input
@@ -152,7 +157,7 @@ export default function FilterSidebar({ filters, updateFilter, resetFilters }) {
       </FilterSection>
 
       {/* Academics */}
-      <FilterSection title="Academics" icon="&#127891;">
+      <FilterSection title="Academics" icon={BookOpen}>
         <div>
           <p className="text-[11px] text-charcoal-light font-medium mb-1.5">School type</p>
           <CheckboxGroup
@@ -210,7 +215,7 @@ export default function FilterSidebar({ filters, updateFilter, resetFilters }) {
       </FilterSection>
 
       {/* Athletics */}
-      <FilterSection title="Athletics & Activities" icon="&#127939;">
+      <FilterSection title="Athletics & Activities" icon={Trophy}>
         <div>
           <p className="text-[11px] text-charcoal-light font-medium mb-1.5">Athletics</p>
           <CheckboxGroup
@@ -243,10 +248,10 @@ export default function FilterSidebar({ filters, updateFilter, resetFilters }) {
       </FilterSection>
 
       {/* School Profile */}
-      <FilterSection title="School Profile" icon="&#127979;">
+      <FilterSection title="School Profile" icon={Building2}>
         <div>
           <label className="text-[11px] text-charcoal-light font-medium">
-            Enrollment: {filters.enrollmentMin} – {filters.enrollmentMax >= 2000 ? '2,000+' : filters.enrollmentMax}
+            Enrollment: {filters.enrollmentMin} to {filters.enrollmentMax >= 2000 ? '2,000+' : filters.enrollmentMax}
           </label>
           <input
             type="range"
@@ -286,7 +291,7 @@ export default function FilterSidebar({ filters, updateFilter, resetFilters }) {
       </FilterSection>
 
       {/* Rating */}
-      <FilterSection title="Ratings" icon="&#11088;">
+      <FilterSection title="Ratings" icon={Star}>
         <div className="flex gap-1.5">
           {[0, 3, 3.5, 4, 4.5].map(r => (
             <button

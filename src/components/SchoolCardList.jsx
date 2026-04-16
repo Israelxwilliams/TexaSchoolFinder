@@ -1,4 +1,5 @@
 import React from 'react'
+import { Heart, ChevronRight, SearchX, Star } from 'lucide-react'
 
 const SORT_OPTIONS = [
   { value: 'relevance', label: 'Relevance' },
@@ -15,10 +16,45 @@ function StarRating({ rating }) {
   return (
     <div className="flex items-center gap-0.5">
       {[...Array(5)].map((_, i) => (
-        <svg key={i} className={`w-3.5 h-3.5 ${i < full ? 'text-yellow-400' : i === full && hasHalf ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
+        <Star
+          key={i}
+          className={`w-3.5 h-3.5 ${i < full ? 'text-yellow-400 fill-yellow-400' : i === full && hasHalf ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+        />
       ))}
+    </div>
+  )
+}
+
+function CoverageBar({ coveragePercent, tefaAmount, outOfPocket, maxTuition }) {
+  const clampedPercent = Math.min(100, coveragePercent)
+  return (
+    <div className="mt-2">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[11px] font-medium text-charcoal-light">Coverage Breakdown</span>
+        <span className={`text-xs font-bold ${clampedPercent >= 100 ? 'text-green-600' : 'text-burnt'}`}>
+          {clampedPercent}% covered
+        </span>
+      </div>
+      <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden flex">
+        <div
+          className={`h-full rounded-full transition-all ${clampedPercent >= 100 ? 'bg-green-500' : 'bg-burnt'}`}
+          style={{ width: `${clampedPercent}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-[10px] text-charcoal-light">
+          Voucher: ${tefaAmount.toLocaleString()}
+        </span>
+        {outOfPocket > 0 ? (
+          <span className="text-[10px] font-semibold text-amber-600">
+            Family: ${outOfPocket.toLocaleString()}/yr
+          </span>
+        ) : (
+          <span className="text-[10px] font-semibold text-green-600">
+            Fully covered
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -26,7 +62,6 @@ function StarRating({ rating }) {
 function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHover }) {
   const minTuition = Math.min(...Object.values(school.tuitionByGrade))
   const maxTuition = Math.max(...Object.values(school.tuitionByGrade))
-  const tefaCovers = maxTuition <= tefaAmount
   const outOfPocket = maxTuition > tefaAmount ? maxTuition - tefaAmount : 0
   const coveragePercent = Math.min(100, Math.round((tefaAmount / maxTuition) * 100))
 
@@ -55,8 +90,11 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
             loading="lazy"
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800' }}
           />
-          <div className="absolute top-2 left-2 bg-green-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
-            &#10003; TEFA
+          {/* Coverage badge - primary metric */}
+          <div className={`absolute top-2 left-2 text-white text-xs font-bold px-2.5 py-1 rounded-lg ${
+            coveragePercent >= 100 ? 'bg-green-600' : coveragePercent >= 75 ? 'bg-burnt' : 'bg-amber-600'
+          }`}>
+            {coveragePercent}% Covered
           </div>
         </div>
 
@@ -64,7 +102,7 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
         <div className="flex-1 p-4 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="font-display text-lg text-charcoal truncate">{school.name}</h3>
+              <h3 className="font-display text-lg font-bold text-charcoal truncate">{school.name}</h3>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 {school.type.map(t => (
                   <span key={t} className="text-[10px] font-semibold bg-cream-dark text-burnt px-2 py-0.5 rounded-md">{t}</span>
@@ -76,27 +114,22 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
               onClick={(e) => { e.stopPropagation(); onToggleSave() }}
               className="flex-shrink-0 p-1.5 rounded-lg hover:bg-cream transition-colors"
             >
-              <svg className="w-5 h-5" fill={isSaved ? '#C05621' : 'none'} stroke="#C05621" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
+              <Heart className="w-5 h-5" fill={isSaved ? '#C05621' : 'none'} stroke="#C05621" />
             </button>
           </div>
 
-          {/* Tuition & TEFA */}
+          {/* Tuition */}
           <div className="mt-2">
-            <div className="flex items-baseline gap-2">
-              <span className="font-bold text-charcoal">{school.tuitionDisplay}</span>
-              {tefaCovers ? (
-                <span className="text-[11px] font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                  TEFA covers full tuition
-                </span>
-              ) : (
-                <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                  +${outOfPocket.toLocaleString()}/yr out of pocket
-                </span>
-              )}
-            </div>
+            <span className="font-bold text-charcoal">{school.tuitionDisplay}</span>
           </div>
+
+          {/* Coverage Breakdown Bar */}
+          <CoverageBar
+            coveragePercent={coveragePercent}
+            tefaAmount={tefaAmount}
+            outOfPocket={outOfPocket}
+            maxTuition={maxTuition}
+          />
 
           {/* Stats row */}
           <div className="flex items-center gap-3 mt-2 text-[11px] text-charcoal-light">
@@ -129,9 +162,7 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
             className="mt-3 text-sm font-semibold text-burnt hover:text-burnt-dark transition-colors flex items-center gap-1"
           >
             View School
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -162,10 +193,10 @@ export default function SchoolCardList({ schools, savedSchools, tefaAmount, sort
       <div className="space-y-3">
         {schools.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-            <div className="text-4xl mb-4">&#128270;</div>
-            <h3 className="font-display text-xl text-charcoal mb-2">No schools match your filters</h3>
+            <SearchX className="w-10 h-10 text-charcoal-light mx-auto mb-4" />
+            <h3 className="font-display text-xl font-bold text-charcoal mb-2">No schools match your filters</h3>
             <p className="text-sm text-charcoal-light max-w-md mx-auto">
-              Try expanding your search radius, adjusting your grade selection, or removing some filters. There are great options waiting for you!
+              Try expanding your search radius, adjusting your grade selection, or removing some filters to see more results.
             </p>
           </div>
         ) : (

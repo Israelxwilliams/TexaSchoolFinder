@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { MapPin, ChevronDown, Search } from 'lucide-react'
 
 const GRADE_OPTIONS = ['PreK', 'K', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
 
@@ -40,12 +41,12 @@ export default function HeroSearch({ searchQuery, gradeLevel, onSearch, onGradeC
 
   return (
     <div className="bg-white border-b border-gray-100">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="font-display text-3xl md:text-4xl text-charcoal text-center mb-2">
-          Find the Right Private School for Your Family
+      <div className="max-w-4xl mx-auto px-4 py-5">
+        <h1 className="font-display text-2xl md:text-3xl font-extrabold text-charcoal text-center mb-1 tracking-tight">
+          Calculate Your Student Voucher Coverage
         </h1>
-        <p className="text-charcoal-light text-center mb-6 text-sm md:text-base">
-          Explore Texas private schools participating in the TEFA program
+        <p className="text-charcoal-light text-center mb-4 text-sm">
+          Search Texas private schools participating in the TEFA program and see what your voucher covers.
         </p>
 
         {/* Search Bar */}
@@ -53,10 +54,7 @@ export default function HeroSearch({ searchQuery, gradeLevel, onSearch, onGradeC
           {/* Location Input */}
           <div className="relative flex-1">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-light">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <MapPin className="w-5 h-5" />
             </div>
             <input
               type="text"
@@ -64,7 +62,7 @@ export default function HeroSearch({ searchQuery, gradeLevel, onSearch, onGradeC
               onChange={(e) => { setInputValue(e.target.value); setShowSuggestions(true) }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              placeholder="Enter city, ZIP, or neighborhood..."
+              placeholder="Enter city, ZIP code, or school name..."
               className="w-full pl-10 pr-4 py-3 bg-cream border border-gray-200 rounded-xl text-charcoal placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-burnt/30 focus:border-burnt transition-all"
             />
             {showSuggestions && filteredSuggestions.length > 0 && (
@@ -93,9 +91,7 @@ export default function HeroSearch({ searchQuery, gradeLevel, onSearch, onGradeC
               <span className={gradeLevel.length > 0 ? 'text-charcoal' : 'text-gray-400'}>
                 {gradeLevel.length > 0 ? `${gradeLevel.length} grade${gradeLevel.length > 1 ? 's' : ''}` : 'Grade level'}
               </span>
-              <svg className="w-4 h-4 text-charcoal-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <ChevronDown className="w-4 h-4 text-charcoal-light" />
             </button>
             {showGradeDropdown && (
               <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 p-3 w-64">
@@ -129,19 +125,19 @@ export default function HeroSearch({ searchQuery, gradeLevel, onSearch, onGradeC
           {/* Search Button */}
           <button
             type="submit"
-            className="py-3 px-8 bg-burnt text-white font-semibold rounded-xl hover:bg-burnt-dark transition-colors shadow-sm hover:shadow-md"
+            className="py-3 px-8 bg-burnt text-white font-semibold rounded-xl hover:bg-burnt-dark transition-colors shadow-sm hover:shadow-md flex items-center justify-center gap-2"
           >
+            <Search className="w-4 h-4" />
             Search
           </button>
         </form>
 
         {/* TEFA Status Banner */}
-        <div className="mt-6 max-w-3xl mx-auto bg-sky-light/60 border border-sky-accent/20 rounded-xl px-4 py-3 text-center">
-          <p className="text-sm text-charcoal">
+        <div className="mt-4 max-w-3xl mx-auto bg-sky-light/60 border border-sky-accent/20 rounded-xl px-4 py-2.5 text-center">
+          <p className="text-xs text-charcoal">
             <span className="font-semibold">Application window is now closed.</span>{' '}
             Lottery results expected in early April. You have until{' '}
-            <span className="font-bold text-burnt">June 1, 2026</span> to select your school.{' '}
-            <span className="text-charcoal-light">Use this time to explore your options!</span>
+            <span className="font-bold text-burnt">June 1, 2026</span> to select your school.
           </p>
         </div>
       </div>
