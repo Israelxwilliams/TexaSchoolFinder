@@ -74,8 +74,12 @@ export default function SchoolMap({ schools, center, zoom, hoveredSchoolId, radi
     markerMapRef.current = {}
 
     schools.forEach(school => {
-      const minTuition = Math.min(...Object.values(school.tuitionByGrade))
-      const priceLabel = minTuition >= 1000 ? `$${(minTuition / 1000).toFixed(minTuition % 1000 === 0 ? 0 : 1)}k` : `$${minTuition}`
+      // Skip schools with no valid coordinates
+      if (!school.lat || !school.lng) return
+
+      const tuitionVals = school.tuitionByGrade ? Object.values(school.tuitionByGrade).filter(v => typeof v === 'number' && v > 0) : []
+      const minTuition = tuitionVals.length > 0 ? Math.min(...tuitionVals) : 0
+      const priceLabel = minTuition >= 1000 ? `$${(minTuition / 1000).toFixed(minTuition % 1000 === 0 ? 0 : 1)}k` : minTuition > 0 ? `$${minTuition}` : 'EFA'
 
       const icon = L.divIcon({
         className: 'school-marker-icon',

@@ -20,7 +20,7 @@ export const getById = query({
   },
 });
 
-// Seed / upsert a school (used by the seed script)
+// Upsert a school
 export const upsert = mutation({
   args: { school: v.any() },
   handler: async (ctx, { school }) => {
@@ -37,5 +37,15 @@ export const upsert = mutation({
     } else {
       await ctx.db.insert("schools", doc);
     }
+  },
+});
+
+// Clear all schools from the database
+export const clearAll = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query("schools").collect();
+    await Promise.all(all.map((s) => ctx.db.delete(s._id)));
+    return { deleted: all.length };
   },
 });

@@ -132,10 +132,13 @@ export default function App() {
 
   const filteredSchools = useMemo(() => {
     let result = schools.map(school => {
-      const minTuition = Math.min(...Object.values(school.tuitionByGrade))
-      const maxTuition = Math.max(...Object.values(school.tuitionByGrade))
+      const tuitionVals = school.tuitionByGrade
+        ? Object.values(school.tuitionByGrade).filter(v => typeof v === 'number' && v >= 0)
+        : []
+      const minTuition = tuitionVals.length > 0 ? Math.min(...tuitionVals) : 0
+      const maxTuition = tuitionVals.length > 0 ? Math.max(...tuitionVals) : 0
       let distance = null
-      if (filters.searchLocation) {
+      if (filters.searchLocation && school.lat && school.lng) {
         distance = haversineDistance(
           filters.searchLocation.lat,
           filters.searchLocation.lng,
@@ -166,20 +169,21 @@ export default function App() {
 
     // School types
     if (filters.schoolTypes.length > 0) {
-      result = result.filter(s => s.type.some(t => filters.schoolTypes.includes(t)))
+      result = result.filter(s => (s.type ?? []).some(t => filters.schoolTypes.includes(t)))
     }
 
     // Accreditations
     if (filters.accreditations.length > 0) {
-      result = result.filter(s => s.accreditation.some(a => filters.accreditations.includes(a)))
+      result = result.filter(s => (s.accreditation ?? []).some(a => filters.accreditations.includes(a)))
     }
 
     // Grades served
     if (filters.gradesServed.length > 0) {
       result = result.filter(s => {
-        const hasElem = s.grades.some(g => ['PreK', 'K', '1', '2', '3', '4', '5'].includes(g))
-        const hasMiddle = s.grades.some(g => ['6', '7', '8'].includes(g))
-        const hasHigh = s.grades.some(g => ['9', '10', '11', '12'].includes(g))
+        const grades = s.grades ?? []
+        const hasElem = grades.some(g => ['PreK', 'K', '1', '2', '3', '4', '5'].includes(g))
+        const hasMiddle = grades.some(g => ['6', '7', '8'].includes(g))
+        const hasHigh = grades.some(g => ['9', '10', '11', '12'].includes(g))
         return (
           (filters.gradesServed.includes('PreK-5') && hasElem) ||
           (filters.gradesServed.includes('6-8') && hasMiddle) ||
@@ -191,7 +195,7 @@ export default function App() {
     // Grade level (specific grades)
     if (filters.gradeLevel.length > 0) {
       result = result.filter(s =>
-        filters.gradeLevel.some(g => s.grades.includes(g))
+        filters.gradeLevel.some(g => (s.grades ?? []).includes(g))
       )
     }
 
@@ -203,28 +207,28 @@ export default function App() {
     // Curriculum types
     if (filters.curriculumTypes.length > 0) {
       result = result.filter(s =>
-        filters.curriculumTypes.some(c => s.curriculumType.includes(c))
+        filters.curriculumTypes.some(c => (s.curriculumType ?? []).includes(c))
       )
     }
 
     // Athletics
     if (filters.athletics.length > 0) {
       result = result.filter(s =>
-        filters.athletics.every(a => s.athletics.includes(a))
+        filters.athletics.every(a => (s.athletics ?? []).includes(a))
       )
     }
 
     // Fine arts
     if (filters.fineArts.length > 0) {
       result = result.filter(s =>
-        filters.fineArts.every(a => s.fineArts.includes(a))
+        filters.fineArts.every(a => (s.fineArts ?? []).includes(a))
       )
     }
 
     // Clubs
     if (filters.clubs.length > 0) {
       result = result.filter(s =>
-        filters.clubs.every(c => s.clubs.includes(c))
+        filters.clubs.every(c => (s.clubs ?? []).includes(c))
       )
     }
 
@@ -311,7 +315,7 @@ export default function App() {
 
   const savedSchoolObjects = useMemo(() =>
     schools.filter(s => savedSchools.includes(s.id)),
-    [savedSchools]
+    [savedSchools, schools]
   )
 
   const mapCenter = filters.searchLocation || DEFAULT_CENTER
