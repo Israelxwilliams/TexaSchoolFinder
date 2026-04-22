@@ -88,10 +88,34 @@ function mapSchool(raw) {
     ? `${Math.round(acad.studentTeacherRatio)}:1`
     : null;
 
+  // Infer religious/school type from name since TEFA API only returns "Private School"
+  const n = (raw.name || "").toLowerCase();
+  const schoolTypes = ["Private School"];
+  if (/catholic|notre dame|st\. |saint |holy (cross|family|ghost|name|rosary|spirit|trinity)|bishop |archbishop |cardinal |msgr\.|monsignor/.test(n)) {
+    schoolTypes.push("Catholic");
+  } else if (/christian|faith|baptist|evangelical|lutheran|methodist|presbyterian|assemblies|pentecostal|apostolic|bible|grace |covenant |calvary |bethel |zion |redeemer|cornerstone|lighthouse|harvest|restoration|resurrection|trinity/.test(n)) {
+    schoolTypes.push("Christian/Evangelical");
+  } else if (/jewish|hebrew|hillel|chabad|yeshiva|torah|shalom|judaica/.test(n)) {
+    schoolTypes.push("Jewish");
+  } else if (/islamic|muslim|quran|al-|masjid/.test(n)) {
+    schoolTypes.push("Islamic");
+  } else if (/montessori/.test(n)) {
+    schoolTypes.push("Montessori");
+  }
+  if (/stem|science.*tech|technology.*science|engineering|robotics/.test(n)) {
+    schoolTypes.push("STEM-focused");
+  }
+  if (/classical|liberal arts/.test(n)) {
+    schoolTypes.push("Classical/Liberal Arts");
+  }
+  if (/online|virtual|hybrid/.test(n)) {
+    schoolTypes.push("Online/Hybrid");
+  }
+
   return {
     id: raw.id,
     name: raw.name,
-    type: raw.type ? [raw.type] : ["Private School"],
+    type: schoolTypes,
     description: raw.description || "",
     tagline: "",
 
