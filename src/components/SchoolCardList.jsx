@@ -48,7 +48,7 @@ function CoverageBar({ coveragePercent, tefaAmount, outOfPocket }) {
         </span>
         {outOfPocket > 0 ? (
           <span className="text-[10px] font-semibold text-amber-600">
-            Family: ${outOfPocket.toLocaleString()}/yr
+            You pay: ${outOfPocket.toLocaleString()}/yr
           </span>
         ) : (
           <span className="text-[10px] font-semibold text-green-600">

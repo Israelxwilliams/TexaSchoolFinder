@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { MapPin, DollarSign, BookOpen, Trophy, Building2, Star, ChevronDown, Info } from 'lucide-react'
 
-const SCHOOL_TYPES = ['Catholic', 'Christian', 'Jewish', 'Islamic', 'Non-denominational', 'Secular', 'Montessori', 'STEM', 'Classical', 'Liberal Arts', 'Online/Hybrid']
+const SCHOOL_TYPES = ['Catholic', 'Christian/Evangelical', 'Jewish', 'Islamic', 'Secular Independent', 'Montessori', 'STEM-focused', 'Classical/Liberal Arts', 'Online/Hybrid']
 const ACCREDITATIONS = ['TEPSAC', 'SACS', 'AdvancED', 'TCSA']
 const GRADE_GROUPS = ['PreK-5', '6-8', '9-12']
 const CURRICULUM_TYPES = ['IB', 'AP Courses', 'Dual Enrollment', 'STEM', 'Classical', 'Reggio Emilia', 'Charlotte Mason']
