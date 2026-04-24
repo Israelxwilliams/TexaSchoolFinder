@@ -38,9 +38,11 @@ function StatBox({ label, value }) {
   )
 }
 
-function CoverageBreakdown({ maxTuition, tefaAmount, isIEP, onToggleIEP }) {
-  const outOfPocket = Math.max(0, maxTuition - tefaAmount)
-  const monthlyOOP = outOfPocket > 0 ? Math.round(outOfPocket / 12) : 0
+function CoverageBreakdown({ minTuition, maxTuition, tefaAmount, isIEP, onToggleIEP }) {
+  const minOutOfPocket = Math.max(0, minTuition - tefaAmount)
+  const maxOutOfPocket = Math.max(0, maxTuition - tefaAmount)
+  const hasRange = minOutOfPocket !== maxOutOfPocket && minOutOfPocket > 0
+  const monthlyOOP = maxOutOfPocket > 0 ? Math.round(maxOutOfPocket / 12) : 0
   const coveragePercent = Math.min(100, Math.round((tefaAmount / maxTuition) * 100))
   const voucherPortion = Math.min(tefaAmount, maxTuition)
 
@@ -100,17 +102,21 @@ function CoverageBreakdown({ maxTuition, tefaAmount, isIEP, onToggleIEP }) {
         <div className="border-t border-burnt/20 pt-2 flex justify-between text-sm">
           <span className="font-semibold text-charcoal">Your Out-of-Pocket</span>
           <div className="text-right">
-            <span className={`font-bold text-lg ${outOfPocket === 0 ? 'text-green-600' : 'text-burnt'}`}>
-              {outOfPocket === 0 ? 'Fully Covered' : `$${outOfPocket.toLocaleString()}/yr`}
+            <span className={`font-bold text-lg ${maxOutOfPocket === 0 ? 'text-green-600' : 'text-burnt'}`}>
+              {maxOutOfPocket === 0
+                ? 'Fully Covered'
+                : hasRange
+                  ? `$${minOutOfPocket.toLocaleString()} – $${maxOutOfPocket.toLocaleString()}/yr`
+                  : `$${maxOutOfPocket.toLocaleString()}/yr`}
             </span>
             {monthlyOOP > 0 && (
-              <span className="block text-xs text-charcoal-light">(~${monthlyOOP}/mo)</span>
+              <span className="block text-xs text-charcoal-light">(up to ~${monthlyOOP}/mo)</span>
             )}
           </div>
         </div>
         <div className="mt-2 bg-white/70 rounded-lg px-3 py-2 flex items-center justify-between">
           <span className="text-xs text-charcoal-light">
-            Your TEFA award covers <span className="font-bold text-burnt">{coveragePercent}%</span> of tuition
+            Your TEFA award covers <span className="font-bold text-burnt">{coveragePercent}%</span> of max tuition
           </span>
           <button
             onClick={onToggleIEP}
@@ -150,6 +156,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
   const tuitionVals = school.tuitionByGrade
     ? Object.values(school.tuitionByGrade).filter(v => typeof v === 'number' && v > 0)
     : []
+  const minTuition = tuitionVals.length > 0 ? Math.min(...tuitionVals) : 0
   const maxTuition = tuitionVals.length > 0 ? Math.max(...tuitionVals) : 0
 
   const handleFormSubmit = (e) => {
@@ -230,6 +237,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
 
         {/* Coverage Breakdown */}
         <CoverageBreakdown
+          minTuition={minTuition}
           maxTuition={maxTuition}
           tefaAmount={tefaAmount}
           isIEP={isIEP}

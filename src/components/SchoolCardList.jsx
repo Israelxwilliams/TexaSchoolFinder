@@ -26,8 +26,10 @@ function StarRating({ rating }) {
   )
 }
 
-function CoverageBar({ coveragePercent, tefaAmount, outOfPocket }) {
+function CoverageBar({ coveragePercent, tefaAmount, minOutOfPocket, maxOutOfPocket }) {
   const clampedPercent = Math.min(100, coveragePercent)
+  const hasRange = minOutOfPocket !== maxOutOfPocket && minOutOfPocket > 0
+
   return (
     <div className="mt-2">
       <div className="flex items-center justify-between mb-1">
@@ -46,9 +48,11 @@ function CoverageBar({ coveragePercent, tefaAmount, outOfPocket }) {
         <span className="text-[10px] text-charcoal-light">
           Voucher: ${tefaAmount.toLocaleString()}
         </span>
-        {outOfPocket > 0 ? (
+        {maxOutOfPocket > 0 ? (
           <span className="text-[10px] font-semibold text-amber-600">
-            You pay: ${outOfPocket.toLocaleString()}/yr
+            {hasRange
+              ? `You pay: $${minOutOfPocket.toLocaleString()} – $${maxOutOfPocket.toLocaleString()}/yr`
+              : `You pay: $${maxOutOfPocket.toLocaleString()}/yr`}
           </span>
         ) : (
           <span className="text-[10px] font-semibold text-green-600">
@@ -87,8 +91,10 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
   const tuitionVals = school.tuitionByGrade
     ? Object.values(school.tuitionByGrade).filter(v => typeof v === 'number' && v > 0)
     : []
+  const minTuition = tuitionVals.length > 0 ? Math.min(...tuitionVals) : 0
   const maxTuition = tuitionVals.length > 0 ? Math.max(...tuitionVals) : 0
-  const outOfPocket = maxTuition > tefaAmount ? maxTuition - tefaAmount : 0
+  const minOutOfPocket = minTuition > tefaAmount ? minTuition - tefaAmount : 0
+  const maxOutOfPocket = maxTuition > tefaAmount ? maxTuition - tefaAmount : 0
   const coveragePercent = maxTuition > 0 ? Math.min(100, Math.round((tefaAmount / maxTuition) * 100)) : 100
 
   const highlights = [
@@ -163,8 +169,8 @@ function SchoolCard({ school, isSaved, tefaAmount, onToggleSave, onSelect, onHov
           <CoverageBar
             coveragePercent={coveragePercent}
             tefaAmount={tefaAmount}
-            outOfPocket={outOfPocket}
-            maxTuition={maxTuition}
+            minOutOfPocket={minOutOfPocket}
+            maxOutOfPocket={maxOutOfPocket}
           />
 
           {/* Stats row */}

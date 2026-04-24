@@ -10,6 +10,9 @@ import SchoolProfileModal from './components/SchoolProfileModal.jsx'
 import TEFAInfoModal from './components/TEFAInfoModal.jsx'
 import SavedSchoolsDrawer from './components/SavedSchoolsDrawer.jsx'
 import CompareSchools from './components/CompareSchools.jsx'
+import AuthModal from './components/AuthModal.jsx'
+import { useAuth } from './context/AuthContext.jsx'
+import { useFavorites } from './hooks/useFavorites.js'
 
 const DEFAULT_CENTER = { lat: 31.9686, lng: -99.9018 } // Center of Texas
 const TEFA_STANDARD = 10474
@@ -81,10 +84,17 @@ const initialFilters = {
 
 export default function App() {
   const schoolsFromDB = useQuery(api.schools.getAll)
-  const schools = (schoolsFromDB ?? []).map(s => ({ ...s, id: s.schoolId }))
+  // Filter out Islamic schools from the live Convex data
+  const schools = (schoolsFromDB ?? [])
+    .filter(s => !(s.type ?? []).includes('Islamic'))
+    .map(s => ({ ...s, id: s.schoolId }))
+
+  const { user } = useAuth()
+  const { favoriteIds, toggleFavorite } = useFavorites(user)
 
   const [filters, setFilters] = useState(initialFilters)
   const [savedSchools, setSavedSchools] = useState([])
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [isIEP, setIsIEP] = useState(false)
   const [selectedSchool, setSelectedSchool] = useState(null)
   const [showTEFAInfo, setShowTEFAInfo] = useState(false)
@@ -93,6 +103,8 @@ export default function App() {
   const [hoveredSchoolId, setHoveredSchoolId] = useState(null)
   const [showMobileMap, setShowMobileMap] = useState(false)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [pendingFavoriteSchoolId, setPendingFavoriteSchoolId] = useState(null)
 
   const tefaAmount = isIEP ? TEFA_IEP : TEFA_STANDARD
 
@@ -109,6 +121,17 @@ export default function App() {
       prev.includes(schoolId) ? prev.filter(id => id !== schoolId) : [...prev, schoolId]
     )
   }, [])
+
+  // Heart click: persist to Supabase if logged in, else prompt auth
+  const handleFavoriteClick = useCallback(async (schoolId) => {
+    if (!user) {
+      setPendingFavoriteSchoolId(schoolId)
+      setShowAuthModal(true)
+      return
+    }
+    toggleFavorite(schoolId)
+    toggleSave(schoolId) // keep local drawer in sync
+  }, [user, toggleFavorite, toggleSave])
 
   const handleSearch = useCallback((query) => {
     const normalized = query.trim().toLowerCase()
@@ -280,6 +303,11 @@ export default function App() {
       result = result.filter(s => s.rating >= filters.minRating)
     }
 
+    // My Favorites only
+    if (showFavoritesOnly && user) {
+      result = result.filter(s => favoriteIds.includes(s.id))
+    }
+
     // Sort
     switch (filters.sortBy) {
       case 'distance':
@@ -311,7 +339,7 @@ export default function App() {
     }
 
     return result
-  }, [filters, tefaAmount, schools])
+  }, [filters, tefaAmount, schools, showFavoritesOnly, user, favoriteIds])
 
   const savedSchoolObjects = useMemo(() =>
     schools.filter(s => savedSchools.includes(s.id)),
@@ -324,7 +352,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-cream">
       <Navbar
-        savedCount={savedSchools.length}
+        savedCount={favoriteIds.length}
         tefaAmount={tefaAmount}
         isIEP={isIEP}
         onToggleIEP={() => setIsIEP(prev => !prev)}
@@ -332,6 +360,9 @@ export default function App() {
         onShowSaved={() => setShowSavedDrawer(true)}
         onShowCompare={() => setShowCompare(true)}
         compareCount={savedSchools.length}
+        onShowAuth={() => setShowAuthModal(true)}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleFavoritesOnly={() => setShowFavoritesOnly(prev => !prev)}
       />
 
       <HeroSearch
@@ -393,11 +424,11 @@ export default function App() {
           <div className={`flex-1 min-w-0 ${showMobileMap ? 'hidden lg:block' : ''}`}>
             <SchoolCardList
               schools={filteredSchools}
-              savedSchools={savedSchools}
+              savedSchools={favoriteIds}
               tefaAmount={tefaAmount}
               sortBy={filters.sortBy}
               onSortChange={(val) => updateFilter('sortBy', val)}
-              onToggleSave={toggleSave}
+              onToggleSave={handleFavoriteClick}
               onSelectSchool={setSelectedSchool}
               onHoverSchool={setHoveredSchoolId}
             />
@@ -428,8 +459,8 @@ export default function App() {
           tefaAmount={tefaAmount}
           isIEP={isIEP}
           onToggleIEP={() => setIsIEP(prev => !prev)}
-          isSaved={savedSchools.includes(selectedSchool.id)}
-          onToggleSave={() => toggleSave(selectedSchool.id)}
+          isSaved={favoriteIds.includes(selectedSchool.id)}
+          onToggleSave={() => handleFavoriteClick(selectedSchool.id)}
           onClose={() => setSelectedSchool(null)}
         />
       )}
@@ -440,10 +471,10 @@ export default function App() {
 
       {showSavedDrawer && (
         <SavedSchoolsDrawer
-          schools={savedSchoolObjects}
+          schools={schools.filter(s => favoriteIds.includes(s.id))}
           tefaAmount={tefaAmount}
           onSelectSchool={(s) => { setSelectedSchool(s); setShowSavedDrawer(false) }}
-          onToggleSave={toggleSave}
+          onToggleSave={handleFavoriteClick}
           onClose={() => setShowSavedDrawer(false)}
         />
       )}
@@ -454,6 +485,19 @@ export default function App() {
           tefaAmount={tefaAmount}
           onClose={() => setShowCompare(false)}
           onSelectSchool={setSelectedSchool}
+        />
+      )}
+
+      {showAuthModal && (
+        <AuthModal
+          onClose={() => { setShowAuthModal(false); setPendingFavoriteSchoolId(null) }}
+          onSuccess={() => {
+            if (pendingFavoriteSchoolId) {
+              toggleFavorite(pendingFavoriteSchoolId)
+              toggleSave(pendingFavoriteSchoolId)
+              setPendingFavoriteSchoolId(null)
+            }
+          }}
         />
       )}
     </div>
