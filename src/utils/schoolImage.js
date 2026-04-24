@@ -19,22 +19,15 @@ const PHOTOS = {
 const RELIGIOUS_WORDS = /christian|catholic|jewish|lutheran|episcopal|baptist|saint|st\.|holy|trinity|grace|covenant|cornerstone|heritage|faith|calvary|sacred|blessed|immaculate/i
 
 export function getStockPhoto(school) {
-  // Use school's own photos if available
+  // Use school's own scraped photo if available
   if (school.photos?.length > 0) return school.photos[0]
 
+  // Fall back to the school's logo (favicon via Google's API)
+  const logoUrl = getLogoUrl(school)
+  if (logoUrl) return logoUrl
+
+  // Last resort: generic school stock photo
   const name = school.name || ''
-  const focus = (school.academicFocusAreas || []).join(' ')
-  const culture = (school.cultureAndValues || []).join(' ')
-
-  if (/montessori/i.test(name)) return PHOTOS.montessori
-  if (RELIGIOUS_WORDS.test(name) || /religious/i.test(culture)) return PHOTOS.religious
-  if (school.isPreK && !school.isElementary && !school.isMiddle && !school.isHigh) return PHOTOS.preschool
-  if (/stem|steam/i.test(focus)) return PHOTOS.stem
-  if (/arts|music/i.test(focus)) return PHOTOS.arts
-  if (school.isHigh && !school.isPreK) return PHOTOS.highschool
-  if (school.isElementary && !school.isHigh) return PHOTOS.elementary
-
-  // Deterministic pick from pool so the same school always gets the same photo
   const idx = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % PHOTOS.pool.length
   return PHOTOS.pool[idx]
 }
