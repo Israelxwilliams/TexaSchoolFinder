@@ -68,13 +68,13 @@ function CoverageBreakdown({ minTuition, maxTuition, tefaAmount, isIEP, onToggle
               <span className="text-[10px] font-bold text-white">Voucher: ${voucherPortion.toLocaleString()}</span>
             )}
           </div>
-          {outOfPocket > 0 && (
+          {maxOutOfPocket > 0 && (
             <div
               className="h-full bg-amber-400 flex items-center justify-center"
               style={{ width: `${100 - coveragePercent}%` }}
             >
               {(100 - coveragePercent) >= 20 && (
-                <span className="text-[10px] font-bold text-charcoal">Family: ${outOfPocket.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-charcoal">Family: ${maxOutOfPocket.toLocaleString()}</span>
               )}
             </div>
           )}
@@ -84,7 +84,7 @@ function CoverageBreakdown({ minTuition, maxTuition, tefaAmount, isIEP, onToggle
             <div className="w-2.5 h-2.5 rounded-sm bg-green-500" />
             <span className="text-[10px] text-charcoal-light">Voucher Portion ({coveragePercent}%)</span>
           </div>
-          {outOfPocket > 0 && (
+          {maxOutOfPocket > 0 && (
             <div className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-sm bg-amber-400" />
               <span className="text-[10px] text-charcoal-light">Family Responsibility ({100 - coveragePercent}%)</span>
@@ -200,10 +200,10 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
             <span className="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
               <Check className="w-3 h-3" /> TEFA Accepted
             </span>
-            {school.accreditation.map(a => (
+            {(school.accreditation ?? []).map(a => (
               <span key={a} className="bg-sky-light text-sky-accent text-xs font-semibold px-2.5 py-1 rounded-lg">{a}</span>
             ))}
-            {school.type.map(t => (
+            {(school.type ?? []).map(t => (
               <span key={t} className="bg-cream-dark text-burnt text-xs font-semibold px-2.5 py-1 rounded-lg">{t}</span>
             ))}
             <span className="bg-gray-100 text-charcoal-light text-xs font-semibold px-2.5 py-1 rounded-lg">{school.gradesLabel}</span>
@@ -287,7 +287,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                 <div>
                   <h4 className="font-semibold text-sm text-charcoal mb-2">Curriculum</h4>
                   <div className="flex flex-wrap gap-2">
-                    {school.curriculumType.map(c => (
+                    {(school.curriculumType ?? []).map(c => (
                       <span key={c} className="bg-cream-dark text-burnt text-xs font-semibold px-3 py-1.5 rounded-lg">{c}</span>
                     ))}
                   </div>
@@ -306,11 +306,11 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                     <p className="text-sm font-semibold">Dual Enrollment</p>
                   </div>
                 </div>
-                {school.languagesOffered.length > 0 && (
+                {(school.languagesOffered ?? []).length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm text-charcoal mb-2">Languages Offered</h4>
                     <div className="flex flex-wrap gap-2">
-                      {school.languagesOffered.map(l => (
+                      {(school.languagesOffered ?? []).map(l => (
                         <span key={l} className="bg-gray-100 text-charcoal text-xs font-semibold px-3 py-1.5 rounded-lg">{l}</span>
                       ))}
                     </div>
@@ -333,11 +333,11 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
             <div>
               <h3 className="font-display text-xl font-bold text-charcoal mb-3">Athletics & Activities</h3>
               <div className="space-y-4">
-                {school.athletics.length > 0 && (
+                {(school.athletics ?? []).length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm text-charcoal mb-2">Athletic Teams</h4>
                     <div className="flex flex-wrap gap-2">
-                      {school.athletics.map(a => (
+                      {(school.athletics ?? []).map(a => (
                         <span key={a} className="bg-burnt/10 text-burnt text-xs font-semibold px-3 py-1.5 rounded-lg">{a}</span>
                       ))}
                     </div>
@@ -348,21 +348,21 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                     )}
                   </div>
                 )}
-                {school.fineArts.length > 0 && (
+                {(school.fineArts ?? []).length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm text-charcoal mb-2">Fine Arts</h4>
                     <div className="flex flex-wrap gap-2">
-                      {school.fineArts.map(a => (
+                      {(school.fineArts ?? []).map(a => (
                         <span key={a} className="bg-purple-50 text-purple-700 text-xs font-semibold px-3 py-1.5 rounded-lg">{a}</span>
                       ))}
                     </div>
                   </div>
                 )}
-                {school.clubs.length > 0 && (
+                {(school.clubs ?? []).length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm text-charcoal mb-2">Clubs & Activities</h4>
                     <div className="flex flex-wrap gap-2">
-                      {school.clubs.map(c => (
+                      {(school.clubs ?? []).map(c => (
                         <span key={c} className="bg-sky-light text-sky-accent text-xs font-semibold px-3 py-1.5 rounded-lg">{c}</span>
                       ))}
                     </div>
@@ -379,7 +379,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                 <div>
                   <h4 className="font-semibold text-sm text-charcoal mb-2">Requirements</h4>
                   <ul className="space-y-1.5">
-                    {school.admissionsRequirements.map(req => (
+                    {(school.admissionsRequirements ?? []).map(req => (
                       <li key={req} className="flex items-start gap-2 text-sm text-charcoal-light">
                         <span className="w-1.5 h-1.5 rounded-full bg-burnt mt-1.5 flex-shrink-0" />
                         {req}
@@ -393,11 +393,11 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                     : <><Check className="w-4 h-4 text-green-600 flex-shrink-0" /><p className="text-sm font-semibold">No entrance exam required</p></>
                   }
                 </div>
-                {school.currentOpenings.length > 0 && (
+                {(school.currentOpenings ?? []).length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm text-charcoal mb-2">Current Openings</h4>
                     <div className="flex flex-wrap gap-1.5">
-                      {school.currentOpenings.map(g => (
+                      {(school.currentOpenings ?? []).map(g => (
                         <span key={g} className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-lg">
                           Grade {g}
                         </span>
@@ -405,11 +405,11 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                     </div>
                   </div>
                 )}
-                {school.waitlistGrades.length > 0 && (
+                {(school.waitlistGrades ?? []).length > 0 && (
                   <div>
                     <h4 className="font-semibold text-sm text-charcoal mb-2">Waitlist Grades</h4>
                     <div className="flex flex-wrap gap-1.5">
-                      {school.waitlistGrades.map(g => (
+                      {(school.waitlistGrades ?? []).map(g => (
                         <span key={g} className="bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-lg">
                           Grade {g}
                         </span>
@@ -428,7 +428,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                 <div>
                   <h4 className="font-semibold text-sm text-charcoal mb-2">Tuition by Grade Level</h4>
                   <div className="bg-cream rounded-xl overflow-hidden">
-                    {Object.entries(school.tuitionByGrade).map(([grade, tuition]) => {
+                    {Object.entries(school.tuitionByGrade ?? {}).map(([grade, tuition]) => {
                       const gradePercent = Math.min(100, Math.round((tefaAmount / tuition) * 100))
                       return (
                         <div key={grade} className="px-4 py-3 border-b border-white/50 last:border-0">
@@ -474,7 +474,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
             <div>
               <h3 className="font-display text-xl font-bold text-charcoal mb-3">Parent Reviews</h3>
               <div className="space-y-4">
-                {school.reviews.map((review, i) => (
+                {(school.reviews ?? []).map((review, i) => (
                   <div key={i} className="bg-cream rounded-xl p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 bg-burnt/10 rounded-full flex items-center justify-center text-burnt font-bold text-sm">
@@ -500,7 +500,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
               <h3 className="font-display text-xl font-bold text-charcoal mb-3">Photo Gallery</h3>
               {(school.photos ?? []).length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
-                  {school.photos.map((photo, i) => (
+                  {(school.photos ?? []).map((photo, i) => (
                     <img
                       key={i}
                       src={photo}
