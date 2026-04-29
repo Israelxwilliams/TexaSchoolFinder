@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Trim trailing slashes so auth URLs don't get double-slashed
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL ?? '').replace(/\/+$/, '')
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '').trim()
 
 const isConfigured = supabaseUrl && supabaseUrl !== 'your-supabase-project-url' &&
   supabaseAnonKey && supabaseAnonKey !== 'your-supabase-anon-key'
