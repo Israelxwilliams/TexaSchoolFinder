@@ -41,7 +41,7 @@ function StatBox({ label, value }) {
 function CoverageBreakdown({ minTuition, maxTuition, tefaAmount, isIEP, onToggleIEP }) {
   const minOutOfPocket = Math.max(0, minTuition - tefaAmount)
   const maxOutOfPocket = Math.max(0, maxTuition - tefaAmount)
-  const hasRange = minOutOfPocket !== maxOutOfPocket && minOutOfPocket > 0
+  const hasRange = minOutOfPocket !== maxOutOfPocket
   const monthlyOOP = maxOutOfPocket > 0 ? Math.round(maxOutOfPocket / 12) : 0
   const coveragePercent = Math.min(100, Math.round((tefaAmount / maxTuition) * 100))
   const voucherPortion = Math.min(tefaAmount, maxTuition)
@@ -425,37 +425,71 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
             <div>
               <h3 className="font-display text-xl font-bold text-charcoal mb-3">TEFA & Tuition</h3>
               <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-sm text-charcoal mb-2">Tuition by Grade Level</h4>
-                  <div className="bg-cream rounded-xl overflow-hidden">
-                    {Object.entries(school.tuitionByGrade ?? {}).map(([grade, tuition]) => {
-                      const gradePercent = Math.min(100, Math.round((tefaAmount / tuition) * 100))
-                      return (
-                        <div key={grade} className="px-4 py-3 border-b border-white/50 last:border-0">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="text-sm font-medium text-charcoal">{grade}</span>
-                            <div className="text-right">
-                              <span className="text-sm font-bold text-charcoal">${tuition.toLocaleString()}/yr</span>
-                            </div>
-                          </div>
-                          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${gradePercent >= 100 ? 'bg-green-500' : 'bg-burnt'}`}
-                              style={{ width: `${gradePercent}%` }}
-                            />
-                          </div>
-                          <div className="text-right mt-0.5">
-                            {tuition <= tefaAmount ? (
-                              <span className="text-[10px] text-green-600 font-semibold">Fully covered by TEFA</span>
-                            ) : (
-                              <span className="text-[10px] text-amber-600 font-semibold">+${(tuition - tefaAmount).toLocaleString()} out of pocket</span>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
+
+                {/* Disclaimer */}
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                  <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-xs font-semibold text-amber-800 mb-0.5">Tuition figures are estimates only</p>
+                    <p className="text-xs text-amber-700">
+                      Actual tuition varies by grade level, enrollment type, sibling discounts, and other factors.
+                      Always verify directly with the school before making enrollment decisions.
+                    </p>
                   </div>
                 </div>
+
+                {/* Tuition range */}
+                <div className="bg-cream rounded-xl p-4">
+                  <h4 className="font-semibold text-sm text-charcoal mb-3">Estimated Tuition Range</h4>
+                  {minTuition > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-charcoal-light">Low end</span>
+                        <span className="font-bold text-charcoal">${minTuition.toLocaleString()}/yr</span>
+                      </div>
+                      {minTuition !== maxTuition && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-charcoal-light">High end</span>
+                          <span className="font-bold text-charcoal">${maxTuition.toLocaleString()}/yr</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                        <span className="text-sm text-charcoal-light">Your TEFA voucher</span>
+                        <span className="font-bold text-green-600">-${tefaAmount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-semibold text-charcoal">Estimated your cost</span>
+                        <span className="font-bold text-burnt">
+                          {maxTuition <= tefaAmount
+                            ? 'Fully covered'
+                            : minTuition <= tefaAmount
+                              ? `$0 – $${(maxTuition - tefaAmount).toLocaleString()}/yr`
+                              : `$${(minTuition - tefaAmount).toLocaleString()} – $${(maxTuition - tefaAmount).toLocaleString()}/yr`}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-charcoal-light">Tuition data not available. See school website.</p>
+                  )}
+                </div>
+
+                {/* Link to school website */}
+                {school.website && (
+                  <a
+                    href={school.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 border-2 border-burnt text-burnt font-semibold rounded-xl hover:bg-burnt hover:text-white transition-colors text-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View Official Tuition on School Website
+                  </a>
+                )}
+
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                   <h4 className="font-semibold text-sm text-green-700 mb-1">TEFA Eligibility Confirmed</h4>
                   <p className="text-xs text-green-600">This school is an approved TEFA participating institution. Verify at educationfreedom.texas.gov</p>

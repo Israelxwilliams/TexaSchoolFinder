@@ -60,6 +60,7 @@ function CoverageBar({ coveragePercent, tefaAmount, minOutOfPocket, maxOutOfPock
           </span>
         )}
       </div>
+      <p className="text-[9px] text-gray-400 mt-0.5 text-right">Estimates only — verify with school</p>
     </div>
   )
 }
