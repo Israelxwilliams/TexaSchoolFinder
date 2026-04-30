@@ -28,7 +28,7 @@ function StarRating({ rating }) {
 
 function CoverageBar({ coveragePercent, tefaAmount, minOutOfPocket, maxOutOfPocket }) {
   const clampedPercent = Math.min(100, coveragePercent)
-  const hasRange = minOutOfPocket !== maxOutOfPocket && minOutOfPocket > 0
+  const hasRange = minOutOfPocket !== maxOutOfPocket
 
   return (
     <div className="mt-2">
