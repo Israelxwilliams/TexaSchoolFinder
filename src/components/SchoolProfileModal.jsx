@@ -164,7 +164,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
     setFormSubmitted(true)
   }
 
-  const tabs = ['overview', 'academics', 'athletics', 'admissions', 'tefa', 'reviews', 'gallery']
+  const tabs = ['overview', 'academics', 'athletics', 'admissions', 'tuition', 'reviews', 'gallery']
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end">
@@ -249,7 +249,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
           <div className="flex">
             {tabs.map(tab => (
               <TabButton key={tab} active={activeTab === tab} onClick={() => setActiveTab(tab)}>
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab === 'tuition' ? 'Tuition & TEFA' : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </TabButton>
             ))}
           </div>
@@ -421,7 +421,7 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
             </div>
           )}
 
-          {activeTab === 'tefa' && (
+          {activeTab === 'tuition' && (
             <div>
               <h3 className="font-display text-xl font-bold text-charcoal mb-3">TEFA & Tuition</h3>
               <div className="space-y-4">
@@ -475,20 +475,18 @@ export default function SchoolProfileModal({ school, tefaAmount, isIEP, onToggle
                   )}
                 </div>
 
-                {/* Link to school website */}
-                {school.website && (
-                  <a
-                    href={school.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 border-2 border-burnt text-burnt font-semibold rounded-xl hover:bg-burnt hover:text-white transition-colors text-sm"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    View Official Tuition on School Website
-                  </a>
-                )}
+                {/* Google search link for school's tuition page */}
+                <a
+                  href={`https://www.google.com/search?q=${encodeURIComponent(school.name + ' tuition ' + (school.city || 'Texas'))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 border-2 border-burnt text-burnt font-semibold rounded-xl hover:bg-burnt hover:text-white transition-colors text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  Find Official Tuition Page
+                </a>
 
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                   <h4 className="font-semibold text-sm text-green-700 mb-1">TEFA Eligibility Confirmed</h4>
