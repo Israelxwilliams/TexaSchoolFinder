@@ -10,7 +10,7 @@ const isConfigured = supabaseUrl && supabaseUrl !== 'your-supabase-project-url' 
 export const supabase = isConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        flowType: 'pkce',
+        flowType: 'implicit',
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
