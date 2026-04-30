@@ -136,8 +136,8 @@ export default function HeroSearch({ searchQuery, gradeLevel, onSearch, onGradeC
         <div className="mt-4 max-w-3xl mx-auto bg-sky-light/60 border border-sky-accent/20 rounded-xl px-4 py-2.5 text-center">
           <p className="text-xs text-charcoal">
             <span className="font-semibold">Application window is now closed.</span>{' '}
-            Lottery results expected in early April. You have until{' '}
-            <span className="font-bold text-burnt">June 1, 2026</span> to select your school.
+            Lottery results expected in late April to early May. You have until{' '}
+            <span className="font-bold text-burnt">July 15, 2026</span> to select your school.
           </p>
         </div>
       </div>

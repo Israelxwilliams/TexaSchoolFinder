@@ -93,6 +93,7 @@ export default function App() {
   const { favoriteIds, toggleFavorite } = useFavorites(user)
 
   const [filters, setFilters] = useState(initialFilters)
+  const [activeFilters, setActiveFilters] = useState(initialFilters)
   const [savedSchools, setSavedSchools] = useState([])
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [isIEP, setIsIEP] = useState(false)
@@ -113,7 +114,8 @@ export default function App() {
   }, [])
 
   const resetFilters = useCallback(() => {
-    setFilters(prev => ({ ...initialFilters, searchQuery: prev.searchQuery, searchLocation: prev.searchLocation }))
+    setFilters(initialFilters)
+    setActiveFilters(initialFilters)
   }, [])
 
   const toggleSave = useCallback((schoolId) => {
@@ -133,27 +135,41 @@ export default function App() {
     toggleSave(schoolId) // keep local drawer in sync
   }, [user, toggleFavorite, toggleSave])
 
-  const handleSearch = useCallback((query) => {
-    const normalized = query.trim().toLowerCase()
-    const cityMatch = Object.entries(CITY_COORDS).find(([city]) =>
-      city.toLowerCase() === normalized || normalized.includes(city.toLowerCase())
-    )
-    if (cityMatch) {
-      setFilters(prev => ({
-        ...prev,
-        searchQuery: query,
-        searchLocation: cityMatch[1],
-      }))
+  const handleSearch = useCallback(async (query) => {
+    const trimmed = query.trim()
+    const normalized = trimmed.toLowerCase()
+    let searchLocation = null
+
+    if (/^\d{5}$/.test(trimmed)) {
+      // ZIP code — geocode via Nominatim
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?postalcode=${trimmed}&country=US&format=json&limit=1`,
+          { headers: { 'Accept-Language': 'en' } }
+        )
+        const data = await res.json()
+        if (data.length > 0) {
+          searchLocation = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+        }
+      } catch (_) {
+        searchLocation = DEFAULT_CENTER
+      }
     } else {
-      setFilters(prev => ({
-        ...prev,
-        searchQuery: query,
-        searchLocation: query.length > 0 ? DEFAULT_CENTER : null,
-      }))
+      const cityMatch = Object.entries(CITY_COORDS).find(([city]) =>
+        city.toLowerCase() === normalized || normalized.includes(city.toLowerCase())
+      )
+      if (cityMatch) {
+        searchLocation = cityMatch[1]
+      }
+      // If no city match and not a ZIP, treat as school name — no location filter
     }
-  }, [])
+
+    setFilters(prev => ({ ...prev, searchQuery: trimmed, searchLocation }))
+    setActiveFilters(prev => ({ ...filters, searchQuery: trimmed, searchLocation }))
+  }, [filters])
 
   const filteredSchools = useMemo(() => {
+    const f = activeFilters
     let result = schools.map(school => {
       const tuitionVals = school.tuitionByGrade
         ? Object.values(school.tuitionByGrade).filter(v => typeof v === 'number' && v >= 0)
@@ -161,10 +177,10 @@ export default function App() {
       const minTuition = tuitionVals.length > 0 ? Math.min(...tuitionVals) : 0
       const maxTuition = tuitionVals.length > 0 ? Math.max(...tuitionVals) : 0
       let distance = null
-      if (filters.searchLocation && school.lat && school.lng) {
+      if (f.searchLocation && school.lat && school.lng) {
         distance = haversineDistance(
-          filters.searchLocation.lat,
-          filters.searchLocation.lng,
+          f.searchLocation.lat,
+          f.searchLocation.lng,
           school.lat,
           school.lng
         )
@@ -172,135 +188,144 @@ export default function App() {
       return { ...school, distanceFromSearch: distance, minTuition, maxTuition }
     })
 
+    // School name / city text search (when no location resolved)
+    if (f.searchQuery && !f.searchLocation) {
+      const q = f.searchQuery.toLowerCase()
+      result = result.filter(s =>
+        (s.name ?? '').toLowerCase().includes(q) ||
+        (s.city ?? '').toLowerCase().includes(q)
+      )
+    }
+
     // Distance filter
-    if (filters.searchLocation) {
-      result = result.filter(s => s.distanceFromSearch !== null && s.distanceFromSearch <= filters.radius)
+    if (f.searchLocation) {
+      result = result.filter(s => s.distanceFromSearch !== null && s.distanceFromSearch <= f.radius)
     }
 
     // Tuition filter
-    result = result.filter(s => s.minTuition >= filters.tuitionMin && s.minTuition <= filters.tuitionMax)
+    result = result.filter(s => s.minTuition >= f.tuitionMin && s.minTuition <= f.tuitionMax)
 
     // TEFA covers all
-    if (filters.tefaCoversAll) {
+    if (f.tefaCoversAll) {
       result = result.filter(s => s.maxTuition <= tefaAmount)
     }
 
     // Financial aid
-    if (filters.financialAid) {
+    if (f.financialAid) {
       result = result.filter(s => s.financialAidAvailable)
     }
 
     // School types
-    if (filters.schoolTypes.length > 0) {
-      result = result.filter(s => (s.type ?? []).some(t => filters.schoolTypes.includes(t)))
+    if (f.schoolTypes.length > 0) {
+      result = result.filter(s => (s.type ?? []).some(t => f.schoolTypes.includes(t)))
     }
 
     // Accreditations
-    if (filters.accreditations.length > 0) {
-      result = result.filter(s => (s.accreditation ?? []).some(a => filters.accreditations.includes(a)))
+    if (f.accreditations.length > 0) {
+      result = result.filter(s => (s.accreditation ?? []).some(a => f.accreditations.includes(a)))
     }
 
     // Grades served
-    if (filters.gradesServed.length > 0) {
+    if (f.gradesServed.length > 0) {
       result = result.filter(s => {
         const grades = s.grades ?? []
         const hasElem = grades.some(g => ['PreK', 'K', '1', '2', '3', '4', '5'].includes(g))
         const hasMiddle = grades.some(g => ['6', '7', '8'].includes(g))
         const hasHigh = grades.some(g => ['9', '10', '11', '12'].includes(g))
         return (
-          (filters.gradesServed.includes('PreK-5') && hasElem) ||
-          (filters.gradesServed.includes('6-8') && hasMiddle) ||
-          (filters.gradesServed.includes('9-12') && hasHigh)
+          (f.gradesServed.includes('PreK-5') && hasElem) ||
+          (f.gradesServed.includes('6-8') && hasMiddle) ||
+          (f.gradesServed.includes('9-12') && hasHigh)
         )
       })
     }
 
     // Grade level (specific grades)
-    if (filters.gradeLevel.length > 0) {
+    if (f.gradeLevel.length > 0) {
       result = result.filter(s =>
-        filters.gradeLevel.some(g => (s.grades ?? []).includes(g))
+        f.gradeLevel.some(g => (s.grades ?? []).includes(g))
       )
     }
 
     // Max class size
-    if (filters.maxClassSize < 30) {
-      result = result.filter(s => s.avgClassSize <= filters.maxClassSize)
+    if (f.maxClassSize < 30) {
+      result = result.filter(s => s.avgClassSize <= f.maxClassSize)
     }
 
     // Curriculum types
-    if (filters.curriculumTypes.length > 0) {
+    if (f.curriculumTypes.length > 0) {
       result = result.filter(s =>
-        filters.curriculumTypes.some(c => (s.curriculumType ?? []).includes(c))
+        f.curriculumTypes.some(c => (s.curriculumType ?? []).includes(c))
       )
     }
 
     // Athletics
-    if (filters.athletics.length > 0) {
+    if (f.athletics.length > 0) {
       result = result.filter(s =>
-        filters.athletics.every(a => (s.athletics ?? []).includes(a))
+        f.athletics.every(a => (s.athletics ?? []).includes(a))
       )
     }
 
     // Fine arts
-    if (filters.fineArts.length > 0) {
+    if (f.fineArts.length > 0) {
       result = result.filter(s =>
-        filters.fineArts.every(a => (s.fineArts ?? []).includes(a))
+        f.fineArts.every(a => (s.fineArts ?? []).includes(a))
       )
     }
 
     // Clubs
-    if (filters.clubs.length > 0) {
+    if (f.clubs.length > 0) {
       result = result.filter(s =>
-        filters.clubs.every(c => (s.clubs ?? []).includes(c))
+        f.clubs.every(c => (s.clubs ?? []).includes(c))
       )
     }
 
     // UIL
-    if (filters.uilParticipant) {
+    if (f.uilParticipant) {
       result = result.filter(s => s.uilParticipant)
     }
 
     // Enrollment
-    result = result.filter(s => s.enrollment >= filters.enrollmentMin && s.enrollment <= filters.enrollmentMax)
+    result = result.filter(s => s.enrollment >= f.enrollmentMin && s.enrollment <= f.enrollmentMax)
 
     // Settings
-    if (filters.settings.length > 0) {
-      result = result.filter(s => filters.settings.includes(s.setting))
+    if (f.settings.length > 0) {
+      result = result.filter(s => f.settings.includes(s.setting))
     }
 
     // Special ed
-    if (filters.specialEdSupport) {
+    if (f.specialEdSupport) {
       result = result.filter(s => s.specialEdSupport)
     }
 
     // Transportation
-    if (filters.transportationProvided) {
+    if (f.transportationProvided) {
       result = result.filter(s => s.transportationProvided)
     }
 
     // Lunch
-    if (filters.lunchProgram) {
+    if (f.lunchProgram) {
       result = result.filter(s => s.lunchProgram)
     }
 
     // Before/after care
-    if (filters.beforeAfterCare) {
+    if (f.beforeAfterCare) {
       result = result.filter(s => s.beforeAfterCare)
     }
 
     // Boarding
-    if (filters.boardingOption) {
+    if (f.boardingOption) {
       result = result.filter(s => s.boardingOption)
     }
 
     // Counseling
-    if (filters.counselingServices) {
+    if (f.counselingServices) {
       result = result.filter(s => s.counselingServices)
     }
 
     // Min rating
-    if (filters.minRating > 0) {
-      result = result.filter(s => s.rating >= filters.minRating)
+    if (f.minRating > 0) {
+      result = result.filter(s => s.rating >= f.minRating)
     }
 
     // My Favorites only
@@ -309,7 +334,7 @@ export default function App() {
     }
 
     // Sort
-    switch (filters.sortBy) {
+    switch (f.sortBy) {
       case 'distance':
         result.sort((a, b) => (a.distanceFromSearch ?? 999) - (b.distanceFromSearch ?? 999))
         break
@@ -326,8 +351,7 @@ export default function App() {
         result.sort((a, b) => b.founded - a.founded)
         break
       default:
-        // relevance: prioritize distance if searching, then rating
-        if (filters.searchLocation) {
+        if (f.searchLocation) {
           result.sort((a, b) => {
             const distDiff = (a.distanceFromSearch ?? 999) - (b.distanceFromSearch ?? 999)
             if (Math.abs(distDiff) > 10) return distDiff
@@ -339,15 +363,15 @@ export default function App() {
     }
 
     return result
-  }, [filters, tefaAmount, schools, showFavoritesOnly, user, favoriteIds])
+  }, [activeFilters, tefaAmount, schools, showFavoritesOnly, user, favoriteIds])
 
   const savedSchoolObjects = useMemo(() =>
     schools.filter(s => savedSchools.includes(s.id)),
     [savedSchools, schools]
   )
 
-  const mapCenter = filters.searchLocation || DEFAULT_CENTER
-  const mapZoom = filters.searchLocation ? 10 : 6
+  const mapCenter = activeFilters.searchLocation || DEFAULT_CENTER
+  const mapZoom = activeFilters.searchLocation ? 10 : 6
 
   return (
     <div className="min-h-screen bg-cream">
@@ -442,8 +466,8 @@ export default function App() {
                 center={mapCenter}
                 zoom={mapZoom}
                 hoveredSchoolId={hoveredSchoolId}
-                radius={filters.searchLocation ? filters.radius : null}
-                searchLocation={filters.searchLocation}
+                radius={activeFilters.searchLocation ? activeFilters.radius : null}
+                searchLocation={activeFilters.searchLocation}
                 onSelectSchool={setSelectedSchool}
                 onHoverSchool={setHoveredSchoolId}
               />

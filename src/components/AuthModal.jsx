@@ -48,7 +48,7 @@ export default function AuthModal({ onClose, onSuccess }) {
           <div className="w-9 h-9 bg-burnt rounded-lg flex items-center justify-center">
             <GraduationCap className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
-          <span className="font-display text-xl font-bold text-charcoal">TexaSchoolFinder</span>
+          <span className="font-display text-xl font-bold text-charcoal">School Choice Finder</span>
         </div>
 
         {!supabaseReady ? (

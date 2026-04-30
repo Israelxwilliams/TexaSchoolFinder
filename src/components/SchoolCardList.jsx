@@ -51,8 +51,8 @@ function CoverageBar({ coveragePercent, tefaAmount, minOutOfPocket, maxOutOfPock
         {maxOutOfPocket > 0 ? (
           <span className="text-[10px] font-semibold text-amber-600">
             {hasRange
-              ? `You pay: $${minOutOfPocket.toLocaleString()} – $${maxOutOfPocket.toLocaleString()}/yr`
-              : `You pay: $${maxOutOfPocket.toLocaleString()}/yr`}
+              ? `Your cost: $${minOutOfPocket.toLocaleString()} – $${maxOutOfPocket.toLocaleString()}/yr`
+              : `Your cost: $${maxOutOfPocket.toLocaleString()}/yr`}
           </span>
         ) : (
           <span className="text-[10px] font-semibold text-green-600">

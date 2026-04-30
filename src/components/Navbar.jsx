@@ -17,7 +17,7 @@ export default function Navbar({
           <div className="w-8 h-8 bg-burnt rounded-lg flex items-center justify-center">
             <GraduationCap className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
           </div>
-          <span className="font-display text-lg font-bold text-charcoal tracking-tight">TexaSchoolFinder</span>
+          <span className="font-display text-lg font-bold text-charcoal tracking-tight">School Choice Finder</span>
         </div>
 
         {/* Right actions */}
